@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TechMarket</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,sans-serif}
+
+body{background:#f4f6fb;color:#111}
+
+header{
+  position:sticky;top:0;background:white;border-bottom:1px solid #eaeaea;
+  padding:14px 6%;display:flex;align-items:center;justify-content:space-between;z-index:10;
+}
+
+.logo{font-size:22px;font-weight:800;color:#4f46e5;letter-spacing:-0.5px}
+
+.search{flex:1;margin:0 20px}
+.search input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #ddd;outline:none;background:#fafafa}
+
+.actions button{background:#111;color:white;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+
+.hero{margin:20px 6%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;border-radius:18px;padding:40px;display:flex;justify-content:space-between;align-items:center;gap:30px}
+.hero h1{font-size:34px;margin-bottom:10px}
+.hero p{opacity:.9;max-width:500px}
+.hero img{width:220px;border-radius:14px}
+
+.section{padding:30px 6%}
+.section h2{margin-bottom:18px;font-size:24px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+
+.card{background:white;border-radius:16px;padding:14px;border:1px solid #eee;transition:.2s}
+.card:hover{transform:translateY(-4px);box-shadow:0 10px 25px rgba(0,0,0,.06)}
+
+.card img{width:100%;height:160px;object-fit:contain;margin-bottom:10px}
+.card h3{font-size:16px;margin-bottom:6px}
+.card p{font-size:13px;color:#666;margin-bottom:10px}
+.price{font-size:18px;font-weight:800;margin-bottom:10px}
+
+.btn{width:100%;padding:10px;border-radius:10px;border:none;background:#4f46e5;color:white;font-weight:700;cursor:pointer}
+
+.qty{display:flex;justify-content:space-between;align-items:center;background:#f3f4f6;padding:8px;border-radius:10px}
+.qty button{border:none;background:white;width:28px;height:28px;border-radius:8px;cursor:pointer;font-weight:800}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center}
+.modal.active{display:flex}
+
+.box{background:white;width:340px;border-radius:16px;padding:20px}
+
+/* SUCCESS SCREEN */
+.success{
+  position:fixed;
+  inset:0;
+  background:rgba(255,255,255,0);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  transition:0.4s ease;
+}
+
+.success.active{
+  display:flex;
+  background:rgba(255,255,255,0.96);
+}
+
+.check{
+  width:180px;
+  height:180px;
+  border-radius:50%;
+  border:8px solid #22c55e;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  animation:pop .4s ease;
+  position:relative;
+}
+
+.check:after{
+  content:"";
+  width:50px;
+  height:90px;
+  border-right:8px solid #22c55e;
+  border-bottom:8px solid #22c55e;
+  transform:rotate(45deg);
+}
+
+.success p{
+  margin-top:24px;
+  font-size:22px;
+  font-weight:800;
+  color:#111;
+}
+
+@keyframes pop{
+  0%{transform:scale(0)}
+  100%{transform:scale(1)}
+}
+
+.order-btn{
+  width:100%;margin-top:10px;
+  padding:12px;border:none;border-radius:10px;
+  background:#16a34a;color:white;font-weight:800;cursor:pointer
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">TechMarket</div>
+  <div class="search"><input placeholder="Поиск товаров..."></div>
+  <div class="actions"><button onclick="openCart()">🛒 <span id="count">0</span></button></div>
+</header>
+
+<div class="hero">
+  <div>
+    <h1>Маркетплейс техники и коллекционных товаров</h1>
+    <p>Смартфоны, ноутбуки, планшеты и фигурки — всё в одном месте</p>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Каталог</h2>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="box">
+    <h3>Корзина</h3>
+    <div id="cart"></div>
+    <button class="order-btn" onclick="order()">Заказать</button>
+    <button onclick="closeCart()" class="btn" style="margin-top:10px">Закрыть</button>
+  </div>
+</div>
+
+<div class="success" id="success">
+  <div style="text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <div class="check"></div>
+    <p>Вы успешно сделали заказ!</p>
+  </div>
+</div>
+
+<script>
+
+const items=[
+  {id:1,name:"iPhone 17 Pro Max",price:15000,img:"https://images.unsplash.com/photo-1598327105666-5b89351aff97"},
+  {id:2,name:"AirPods Ultra",price:1000,img:"https://images.macrumors.com/t/iAY6H_lxBL1w8T6paeLDAe2EuSI=/2500x/article-new/2025/09/airpods-pro-3-blue.jpeg"},
+  {id:3,name:"Apple Watch X",price:1299,img:"https://images.unsplash.com/photo-1546868871-7041f2a55e12"},
+  {id:4,name:"MacBook Pro M3",price:2499,img:"https://images.unsplash.com/photo-1517336714731-489689fd1ca8"},
+  {id:5,name:"iPad Pro",price:1199,img:"https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0"},
+  {id:6,name:"Labubu Figure",price:2000,img:"https://share.google/ca2hqjkOO9vW5OnTX"}
+];
+
+let cart={};
+
+function playSound(){
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const o=ctx.createOscillator();
+  const g=ctx.createGain();
+  o.type="sine";o.frequency.value=880;
+  g.gain.value=0.1;
+  o.connect(g);g.connect(ctx.destination);
+  o.start();setTimeout(()=>o.stop(),200);
+}
+
+function render(){
+  const g=document.getElementById('grid');
+  g.innerHTML="";
+
+  items.forEach(i=>{
+    const q=cart[i.id]||0;
+
+    g.innerHTML+=`
+    <div class="card">
+      <img src="${i.img}" />
+      <h3>${i.name}</h3>
+      <p>Официальная версия товара</p>
+      <div class="price">$${i.price}</div>
+
+      ${q===0?
+        `<button class='btn' onclick='add(${i.id})'>В корзину</button>`:
+        `<div class='qty'>
+          <button onclick='dec(${i.id})'>-</button>
+          <b>${q}</b>
+          <button onclick='inc(${i.id})'>+</button>
+        </div>`
+      }
+    </div>`;
+  });
+
+  document.getElementById('count').innerText=
+    Object.values(cart).reduce((a,b)=>a+b,0);
+}
+
+function add(id){cart[id]=1;render()}
+function inc(id){cart[id]++;render()}
+function dec(id){cart[id]--;if(cart[id]<=0)delete cart[id];render()}
+
+function openCart(){
+  const c=document.getElementById('cart');
+  c.innerHTML=Object.keys(cart).length?
+    Object.entries(cart).map(([id,q])=>{
+      const i=items.find(x=>x.id==id);
+      return `<p>${i.name} x${q}</p>`;
+    }).join('')
+    :'Пусто';
+
+  document.getElementById('modal').classList.add('active');
+}
+
+function closeCart(){
+  document.getElementById('modal').classList.remove('active');
+}
+
+function order(){
+  cart={};
+  render();
+  closeCart();
+
+  playSound();
+
+  const s=document.getElementById('success');
+  s.classList.add('active');
+
+  setTimeout(()=>s.classList.remove('active'),2000);
+}
+
+render();
+
+</script>
+
+</body>
+</html>
